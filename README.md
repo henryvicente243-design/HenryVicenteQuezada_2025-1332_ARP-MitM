@@ -83,7 +83,8 @@ sudo python3 arp_mitm.py 10.13.32.11 10.13.32.1 eth0
 ## 5. Capturas de Pantalla
 
 ### Antes del ataque
-<!-- ![Antes](capturas/arp_antes.png) -->
+<img width="633" height="463" alt="image" src="https://github.com/user-attachments/assets/d6fa853a-1695-49f0-8b0f-6fa36ff5ef5a" />
+
 > 📷 `VPC10# show arp` — MAC real de R1: `aa:bb:cc:00:01:00`
 
 ### Script en ejecución
