@@ -1,4 +1,4 @@
-# Ataque MitM mediante ARP Spoofing
+# Ataque MitM mediante ARP 
 **Nombre:** Henry Vicente Quezada | **Matrícula:** 2025-1332 | **Fecha:** Junio 2026
 
 ---
