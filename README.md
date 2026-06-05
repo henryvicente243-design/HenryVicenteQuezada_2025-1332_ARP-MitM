@@ -88,15 +88,18 @@ sudo python3 arp_mitm.py 10.13.32.11 10.13.32.1 eth0
 > 📷 `VPC10# show arp` — MAC real de R1: `aa:bb:cc:00:01:00`
 
 ### Script en ejecución
-<!-- ![Script](capturas/arp_script.png) -->
+<img width="640" height="530" alt="image" src="https://github.com/user-attachments/assets/475e1a6a-ed6f-4e3e-8a1d-38d0f1b66abe" />
+
 > 📷 Kali ejecutando `arp_mitm.py` mostrando paquetes ARP enviados
 
 ### Durante el ataque
-<!-- ![Ataque](capturas/arp_ataque.png) -->
+<img width="643" height="474" alt="image" src="https://github.com/user-attachments/assets/43d4dd31-0723-4147-a682-81c0ccac4323" />
+
 > 📷 `VPC10# show arp` — MAC de Kali como gateway: `00:0c:29:xx:xx:xx`
 
 ### Contramedida aplicada
-<!-- ![Contramedida](capturas/arp_contramedida.png) -->
+<img width="621" height="454" alt="image" src="https://github.com/user-attachments/assets/4d756895-73c3-4fec-929d-46333c8f1705" />
+
 > 📷 `SW1# show ip arp inspection statistics` — paquetes ARP bloqueados
 
 ---
