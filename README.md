@@ -4,9 +4,7 @@
 ---
 
 ## 🎬 Video Demostrativo
-[![Ver en YouTube](https://img.shields.io/badge/YouTube-Ver%20Video-red?logo=youtube)](PEGAR_LINK_VIDEO_AQUI)
-
-> **⚠️ Reemplazar** `PEGAR_LINK_VIDEO_AQUI` con el URL real del video en YouTube.
+https://youtu.be/iapwx4i7zfk?list=PLhmycmsx2nBtM_kPjpLdj-vl3sWWjShMS
 
 ---
 
@@ -52,8 +50,7 @@ sudo python3 arp_mitm.py 10.13.32.11 10.13.32.1 eth0
 ## 4. Documentación de la Red
 
 ### Topología
-<!-- ![Topología PNetLab](capturas/topologia.png) -->
-> 📷 **Insertar captura de la topología en PNetLab** (con nombre y matrícula visibles)
+ <img width="682" height="584" alt="image" src="https://github.com/user-attachments/assets/f458562e-8e80-4a6f-b3bc-e59b984e8984" />
 
 ### Tabla de Direccionamiento
 | Dispositivo | Interfaz | VLAN | IP | Máscara | Rol |
