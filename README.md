@@ -182,6 +182,7 @@ if __name__ == "__main__":
     arp_mitm(sys.argv[1], sys.argv[2], sys.argv[3])
 
 🛡️ Contramedidas aplicada:
+Dynamic ARP Inspection (DAI) combinado con DHCP Snooping en SW1:
 
 SW1(config)# ip dhcp snooping
 SW1(config)# ip dhcp snooping vlan 10
